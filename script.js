@@ -1,4 +1,4 @@
-const API_KEY = "86a0d1dd1eea42098deee632db0b5ade";
+const API_KEY = "0ea2bdb2e0714ed0a010339f866ae4b0";
 const url = "https://newsapi.org/v2/everything?q=";
 
 window.addEventListener("load", () => fetchNews("Technology"));
@@ -34,7 +34,7 @@ function fillDataInCard(cardClone, article) {
     newsTitle.innerHTML = `${article.title.slice(0, 60)}...`;
     newsDesc.innerHTML = `${article.description.slice(0, 150)}...`;
 
-    const date = new Date(article.publishedAt).toLocaleString("en-US", { timeZone: "America/New_York" })
+    const date = new Date(article.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
 
     newsSource.innerHTML = `${article.source.name} · ${date}`;
 
