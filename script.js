@@ -1,5 +1,5 @@
 const API_KEY = "86a0d1dd1eea42098deee632db0b5ade";
-const url = "https://newsapi.org/v2/everything?q=";
+const url = "https://newsapi.org/v2/everything?q=maryland";
 
 window.addEventListener("load", () => fetchNews("Technology"));
 
