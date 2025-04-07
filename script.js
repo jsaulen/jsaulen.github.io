@@ -1,5 +1,5 @@
 const API_KEY = "86a0d1dd1eea42098deee632db0b5ade";
-const url = "https://newsapi.org/v2/everything?q=maryland";
+const url = "https://newsapi.org/v2/everything?q=tesla&from=2025-03-07&sortBy=publishedAt&apiKey=86a0d1dd1eea42098deee632db0b5ade";
 
 window.addEventListener("load", () => fetchNews("Technology"));
 
