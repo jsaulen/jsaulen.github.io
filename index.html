@@ -30,21 +30,9 @@
         .news-item {
             border-bottom: 1px solid #eee;
             padding: 20px 0;
-            position: relative;
         }
         .news-item:last-child {
             border-bottom: none;
-        }
-        .news-item::before {
-            content: attr(data-source);
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            font-size: 0.7em;
-            background: rgba(0,0,0,0.1);
-            padding: 2px 5px;
-            border-radius: 3px;
-            color: #555;
         }
         .news-title {
             font-size: 1.2em;
@@ -360,7 +348,6 @@
             articles.forEach(article => {
                 const articleEl = document.createElement('div');
                 articleEl.className = 'news-item';
-                articleEl.dataset.source = article.sourceApi;
                 
                 const title = article.title || 'No title available';
                 const url = article.url || article.link || article.source?.url || '#';
