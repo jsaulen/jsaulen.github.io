@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,"> <!-- Prevents favicon 404 -->
     <title>Manatee County News</title>
     <style>
         body {
@@ -197,7 +198,7 @@
     <button class="load-more" id="loadMore">Load More News</button>
 
     <script>
-        // API configurations with proper parameter handling
+        // API configurations with secure fetching
         const APIS = [
             {
                 name: 'NewsData.io',
@@ -271,7 +272,9 @@
         // State management
         const state = {
             category: 'general',
-            isLoading: false
+            isLoading: false,
+            currentPage: 1,
+            hasMoreArticles: true
         };
 
         // DOM elements
@@ -281,6 +284,23 @@
             refreshBtn: document.getElementById('refreshBtn'),
             categoryFilter: document.getElementById('categoryFilter')
         };
+
+        // Secure fetch helper
+        async function secureFetch(url, params) {
+            try {
+                const response = await fetch(`${url}?${new URLSearchParams(params)}`, {
+                    credentials: 'omit', // Prevents cookie warnings
+                    referrerPolicy: 'no-referrer' // Enhances privacy
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
 
         // Main function to fetch news from all APIs
         async function fetchAllNews() {
@@ -293,18 +313,9 @@
             try {
                 const requests = APIS.map(api => {
                     const params = api.getParams(state.category);
-                    const url = `${api.url}?${new URLSearchParams(params)}`;
-                    
-                    return fetch(url)
-                        .then(async response => {
-                            if (!response.ok) {
-                                const error = await response.json().catch(() => null);
-                                throw new Error(error?.message || `${api.name} request failed`);
-                            }
-                            return response.json();
-                        })
+                    return secureFetch(api.url, params)
                         .then(data => ({
-                            api: api.name, 
+                            api: api.name,
                             articles: api.parser(data).map(article => ({
                                 ...article,
                                 sourceApi: api.name,
@@ -363,7 +374,7 @@
                 articleEl.innerHTML = `
                     ${imageUrl ? `
                         <img src="${imageUrl}" alt="${title}" class="news-image" 
-                             onerror="this.style.display='none'">
+                             loading="lazy" onerror="this.style.display='none'">
                     ` : ''}
                     <div class="news-title">
                         <a href="${url}" target="_blank" rel="noopener noreferrer">
@@ -399,27 +410,32 @@
         // Event handlers
         function handleCategoryChange(e) {
             if (e.target.tagName === 'BUTTON') {
-                // Update active category button
                 document.querySelectorAll('.filter-container button')
                     .forEach(btn => btn.classList.remove('active'));
                 e.target.classList.add('active');
                 
-                // Update state and fetch news
                 state.category = e.target.dataset.category;
+                state.currentPage = 1;
                 fetchAllNews();
             }
         }
 
         function handleRefresh() {
+            state.currentPage = 1;
+            fetchAllNews();
+        }
+
+        function handleLoadMore() {
+            state.currentPage++;
             fetchAllNews();
         }
 
         // Initialize event listeners
         elements.categoryFilter.addEventListener('click', handleCategoryChange);
         elements.refreshBtn.addEventListener('click', handleRefresh);
-        elements.loadMoreBtn.addEventListener('click', fetchAllNews);
+        elements.loadMoreBtn.addEventListener('click', handleLoadMore);
 
-        // Initial load when page opens
+        // Initial load
         window.addEventListener('load', fetchAllNews);
     </script>
 </body>
