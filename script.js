@@ -1,5 +1,5 @@
 const API_KEY = "pub_790149e76fb69cdc140fba83cb01d75daeb52";
-const url = "https://newsdata.io/api/1/latest?apikey=pub_790149e76fb69cdc140fba83cb01d75daeb52&q=manateecounty";
+const url = "https://newsdata.io/api/1/latest?apikey=pub_790149e76fb69cdc140fba83cb01d75daeb52&q=manatee_county";
 
 window.addEventListener("load", () => fetchNews("Technology"));
 
