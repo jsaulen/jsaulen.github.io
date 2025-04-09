@@ -1,5 +1,5 @@
-const API_KEY = "86a0d1dd1eea42098deee632db0b5ade";
-const url = "https://newsapi.org/v2/everything?q=technology&from=2025-03-07&sortBy=publishedAt&apiKey";
+const API_KEY = "pub_790149e76fb69cdc140fba83cb01d75daeb52";
+const url = "https://newsdata.io/api/1/latest?apikey=pub_790149e76fb69cdc140fba83cb01d75daeb52&q=manateecounty";
 
 window.addEventListener("load", () => fetchNews("Technology"));
 
