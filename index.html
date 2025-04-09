@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Reader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .news-container {
+            margin-top: 30px;
+        }
+        .news-item {
+            border-bottom: 1px solid #eee;
+            padding: 20px 0;
+        }
+        .news-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .news-source {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .news-description {
+            margin-bottom: 10px;
+        }
+        .news-image {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .load-more {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .load-more:hover {
+            background-color: #0056b3;
+        }
+        .load-more:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            text-align: center;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+        .filter-container {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .filter-container button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .filter-container button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .api-selector {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .search-container {
+            margin: 15px 0;
+            text-align: center;
+        }
+        .search-container input {
+            padding: 8px;
+            width: 60%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .search-container button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Latest News</h1>
+    
+    <div class="api-selector">
+        <button id="newsDataBtn" class="active">NewsData.io</button>
+        <button id="theNewsApiBtn">TheNewsAPI</button>
+    </div>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for news...">
+        <button id="searchBtn">Search</button>
+    </div>
+    
+    <div class="filter-container" id="categoryFilter">
+        <button data-category="general" class="active">General</button>
+        <button data-category="business">Business</button>
+        <button data-category="technology">Technology</button>
+        <button data-category="sports">Sports</button>
+        <button data-category="health">Health</button>
+        <button data-category="science">Science</button>
+        <button data-category="entertainment">Entertainment</button>
+    </div>
+    
+    <div class="news-container" id="newsContainer"></div>
+    <button class="load-more" id="loadMore">Load More News</button>
+
+    <script>
+        // API configurations
+        const APIS = {
+            newsData: {
+                name: 'NewsData.io',
+                key: 'pub_790149e76fb69cdc140fba83cb01d75daeb52',
+                url: 'https://newsdata.io/api/1/news',
+                params: {
+                    language: 'en',
+                    country: 'us'
+                }
+            },
+            theNewsApi: {
+                name: 'TheNewsAPI',
+                key: '1gV8CxQYruyKQbholNiOYzHIKYsSyu7MHLZrQqQ7',
+                url: 'https://api.thenewsapi.com/v1/news/top',
+                params: {
+                    locale: 'us'
+                }
+            }
+        };
+        
+        // DOM elements
+        const newsContainer = document.getElementById('newsContainer');
+        const loadMoreBtn = document.getElementById('loadMore');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const newsDataBtn = document.getElementById('newsDataBtn');
+        const theNewsApiBtn = document.getElementById('theNewsApiBtn');
+        
+        // State variables
+        let currentPage = 1;
+        let isLoading = false;
+        let currentCategory = 'general';
+        let currentApi = 'newsData';
+        let currentQuery = '';
+        let hasMoreArticles = true;
+        let nextPageToken = null;
+        
+        // Fetch news from API
+        async function fetchNews() {
+            if (isLoading || !hasMoreArticles) return;
+            
+            isLoading = true;
+            loadMoreBtn.disabled = true;
+            
+            // Show loading indicator
+            if (currentPage === 1) {
+                newsContainer.innerHTML = '<p class="loading">Loading news...</p>';
+            }
+            
+            try {
+                const api = APIS[currentApi];
+                const params = new URLSearchParams({
+                    ...api.params,
+                    [currentApi === 'newsData' ? 'apikey' : 'api_token']: api.key,
+                    page: currentApi === 'theNewsApi' ? currentPage : undefined,
+                    [currentApi === 'newsData' ? 'page' : 'limit']: currentApi === 'newsData' ? nextPageToken : 10,
+                    category: currentApi === 'newsData' ? undefined : currentCategory,
+                    category: currentApi === 'theNewsApi' ? currentCategory : undefined,
+                    q: currentQuery || undefined
+                });
+                
+                // NewsData.io uses different parameter names
+                if (currentApi === 'newsData') {
+                    if (currentCategory !== 'general') {
+                        params.append('category', currentCategory);
+                    }
+                    if (nextPageToken) {
+                        params.append('page', nextPageToken);
+                    }
+                }
+                
+                const response = await fetch(`${api.url}?${params}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Handle different API response formats
+                let articles = [];
+                if (currentApi === 'newsData') {
+                    if (data.status !== 'success') {
+                        throw new Error(data.message || 'Unknown error from API');
+                    }
+                    articles = data.results || [];
+                    nextPageToken = data.nextPage || null;
+                    hasMoreArticles = !!nextPageToken;
+                } else { // theNewsApi
+                    if (!data.data) {
+                        throw new Error('No data returned from API');
+                    }
+                    articles = data.data || [];
+                    hasMoreArticles = articles.length >= 10;
+                }
+                
+                // If this is the first load, clear the loading indicator
+                if (currentPage === 1) {
+                    newsContainer.innerHTML = '';
+                }
+                
+                displayNews(articles);
+                
+                // Update pagination
+                if (currentApi === 'theNewsApi' && hasMoreArticles) {
+                    currentPage++;
+                }
+                
+                // Show/hide load more button
+                if (hasMoreArticles) {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.style.display = 'block';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                newsContainer.innerHTML = `<p class="error">Failed to load news. ${error.message}</p>`;
+                loadMoreBtn.style.display = 'none';
+            } finally {
+                isLoading = false;
+            }
+        }
+        
+        // Display news articles
+        function displayNews(articles) {
+            if (!articles || articles.length === 0) {
+                if (currentPage === 1) {
+                    newsContainer.innerHTML = '<p class="error">No news articles found.</p>';
+                }
+                loadMoreBtn.style.display = 'none';
+                return;
+            }
+            
+            articles.forEach(article => {
+                const articleElement = document.createElement('div');
+                articleElement.className = 'news-item';
+                
+                // Handle different API response formats
+                const title = article.title || 'No title';
+                const url = article.url || article.link || '#';
+                const imageUrl = article.image_url || article.urlToImage;
+                const source = article.source?.name || article.source || article.source_id || 'Unknown source';
+                const description = article.description || 'No description available';
+                const content = article.content || article.snippet;
+                const pubDate = article.published_at || article.pubDate;
+                
+                let imageHtml = '';
+                if (imageUrl) {
+                    imageHtml = `<img src="${imageUrl}" alt="${title}" class="news-image" onerror="this.style.display='none'">`;
+                }
+                
+                // Format date
+                let dateString = '';
+                if (pubDate) {
+                    const pubDateObj = new Date(pubDate);
+                    dateString = pubDateObj.toLocaleDateString() + ' ' + pubDateObj.toLocaleTimeString();
+                }
+                
+                articleElement.innerHTML = `
+                    ${imageHtml}
+                    <div class="news-title">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a>
+                    </div>
+                    <div class="news-source">
+                        ${source} • ${dateString}
+                    </div>
+                    <div class="news-description">
+                        ${description}
+                    </div>
+                    ${content ? `<div class="news-content">${content.substring(0, 200)}...</div>` : ''}
+                `;
+                
+                newsContainer.appendChild(articleElement);
+            });
+        }
+        
+        // Reset state for new search/filter
+        function resetState() {
+            currentPage = 1;
+            nextPageToken = null;
+            hasMoreArticles = true;
+            loadMoreBtn.style.display = 'block';
+            loadMoreBtn.disabled = false;
+        }
+        
+        // Handle category filter changes
+        categoryFilter.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                // Update active button
+                document.querySelector('.filter-container button.active').classList.remove('active');
+                e.target.classList.add('active');
+                
+                // Update category and reset state
+                currentCategory = e.target.dataset.category;
+                resetState();
+                
+                // Fetch new articles
+                fetchNews();
+            }
+        });
+        
+        // Handle API selection
+        newsDataBtn.addEventListener('click', () => {
+            if (currentApi !== 'newsData') {
+                currentApi = 'newsData';
+                newsDataBtn.classList.add('active');
+                theNewsApiBtn.classList.remove('active');
+                resetState();
+                fetchNews();
+            }
+        });
+        
+        theNewsApiBtn.addEventListener('click', () => {
+            if (currentApi !== 'theNewsApi') {
+                currentApi = 'theNewsApi';
+                theNewsApiBtn.classList.add('active');
+                newsDataBtn.classList.remove('active');
+                resetState();
+                fetchNews();
+            }
+        });
+        
+        // Handle search
+        searchBtn.addEventListener('click', () => {
+            currentQuery = searchInput.value.trim();
+            resetState();
+            fetchNews();
+        });
+        
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                currentQuery = searchInput.value.trim();
+                resetState();
+                fetchNews();
+            }
+        });
+        
+        // Load more news
+        loadMoreBtn.addEventListener('click', fetchNews);
+        
+        // Initial load
+        fetchNews();
+    </script>
+</body>
+</html>
