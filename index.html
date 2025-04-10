@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Enhanced Viewport Configuration -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" href="data:,">
     <title>Manatee County News</title>
     <style>
@@ -21,13 +20,16 @@
             color: #2c3e50;
             margin-bottom: 20px;
         }
-        .news-container {
+        
+        /* Desktop news container */
+        .desktop-view .news-container {
             margin-top: 20px;
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             padding: 20px;
         }
+        
         .news-item {
             border-bottom: 1px solid #eee;
             padding: 20px 0;
@@ -103,87 +105,74 @@
             background-color: #27ae60;
         }
 
-        /* Mobile-first approach with orientation detection */
+        /* Mobile carousel styles (applies to all mobile devices) */
         @media (max-width: 600px) {
-            /* Default mobile styles (portrait) */
-            .mobile-landscape-view {
-                display: none;
-            }
-            
-            .desktop-view {
-                display: block;
-            }
-            
             body {
                 padding: 10px;
             }
             
-            .news-container {
+            .desktop-view {
+                display: none;
+            }
+            
+            .mobile-view {
+                display: block;
+                margin-top: 15px;
+            }
+            
+            .carousel-container {
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
                 padding: 10px;
             }
             
-            /* Landscape overrides */
-            @media (orientation: landscape) {
-                .news-container {
-                    overflow: hidden;
-                    padding: 10px;
-                }
-                
-                .carousel {
-                    display: flex;
-                    overflow-x: auto;
-                    scroll-snap-type: x mandatory;
-                    -webkit-overflow-scrolling: touch;
-                    scrollbar-width: none;
-                }
-                
-                .carousel::-webkit-scrollbar {
-                    display: none;
-                }
-                
-                .carousel-item {
-                    flex: 0 0 90%;
-                    scroll-snap-align: start;
-                    margin-right: 10px;
-                    background: white;
-                    border-radius: 8px;
-                    padding: 15px;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    border-bottom: none;
-                }
-                
-                .desktop-view {
-                    display: none;
-                }
-                
-                .mobile-landscape-view {
-                    display: block;
-                }
-                
-                .carousel-nav {
-                    display: flex;
-                    justify-content: center;
-                    margin-top: 15px;
-                }
-                
-                .carousel-dot {
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    background: #ddd;
-                    margin: 0 5px;
-                    cursor: pointer;
-                }
-                
-                .carousel-dot.active {
-                    background: #2ecc71;
-                }
+            .carousel {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: 15px;
+                padding-bottom: 10px;
+            }
+            
+            .carousel::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .carousel-item {
+                flex: 0 0 85%;
+                scroll-snap-align: start;
+                background: white;
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            
+            .carousel-nav {
+                display: flex;
+                justify-content: center;
+                margin-top: 15px;
+            }
+            
+            .carousel-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #ddd;
+                margin: 0 5px;
+                cursor: pointer;
+            }
+            
+            .carousel-dot.active {
+                background: #2ecc71;
             }
         }
         
         /* Desktop styles */
         @media (min-width: 601px) {
-            .mobile-landscape-view {
+            .mobile-view {
                 display: none;
             }
             
@@ -197,8 +186,16 @@
     <h1>Manatee County News</h1>
     <button class="refresh-btn" id="refreshBtn">Refresh News</button>
     
-    <div class="news-container desktop-view" id="newsContainer"></div>
-    <div class="news-container mobile-landscape-view" id="mobileLandscapeNewsContainer"></div>
+    <div class="desktop-view">
+        <div class="news-container" id="newsContainer"></div>
+    </div>
+    
+    <div class="mobile-view">
+        <div class="carousel-container">
+            <div class="carousel" id="mobileCarousel"></div>
+            <div class="carousel-nav" id="carouselNav"></div>
+        </div>
+    </div>
 
     <script>
         // API configurations
@@ -251,14 +248,15 @@
         // DOM elements
         const elements = {
             newsContainer: document.getElementById('newsContainer'),
-            mobileLandscapeNewsContainer: document.getElementById('mobileLandscapeNewsContainer'),
+            mobileCarousel: document.getElementById('mobileCarousel'),
+            carouselNav: document.getElementById('carouselNav'),
             refreshBtn: document.getElementById('refreshBtn')
         };
 
         // Fetch news from all APIs
         async function fetchAllNews() {
             elements.newsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
-            elements.mobileLandscapeNewsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
+            elements.mobileCarousel.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
             
             try {
                 const requests = APIS.map(api => {
@@ -284,7 +282,7 @@
                     .sort((a, b) => b.sortDate - a.sortDate);
                 
                 displayNews(allArticles);
-                displayMobileLandscapeNews(allArticles);
+                displayMobileCarousel(allArticles);
                 
             } catch (error) {
                 console.error('Combined fetch error:', error);
@@ -347,17 +345,14 @@
             });
         }
 
-        function displayMobileLandscapeNews(articles) {
+        function displayMobileCarousel(articles) {
             if (!articles || articles.length === 0) {
-                showMobileLandscapeError('No news articles found about Manatee County. Please try refreshing.');
+                showMobileError('No news articles found about Manatee County. Please try refreshing.');
                 return;
             }
             
-            elements.mobileLandscapeNewsContainer.innerHTML = '';
-            
-            // Create carousel container
-            const carousel = document.createElement('div');
-            carousel.className = 'carousel';
+            elements.mobileCarousel.innerHTML = '';
+            elements.carouselNav.innerHTML = '';
             
             // Create carousel items
             articles.forEach((article, index) => {
@@ -398,13 +393,10 @@
                     ` : ''}
                 `;
                 
-                carousel.appendChild(carouselItem);
+                elements.mobileCarousel.appendChild(carouselItem);
             });
             
             // Create navigation dots
-            const carouselNav = document.createElement('div');
-            carouselNav.className = 'carousel-nav';
-            
             articles.forEach((_, index) => {
                 const dot = document.createElement('div');
                 dot.className = 'carousel-dot' + (index === 0 ? ' active' : '');
@@ -412,16 +404,13 @@
                 dot.addEventListener('click', () => {
                     scrollToCarouselItem(index);
                 });
-                carouselNav.appendChild(dot);
+                elements.carouselNav.appendChild(dot);
             });
             
             // Add scroll event listener to update active dot
-            carousel.addEventListener('scroll', () => {
-                updateActiveDot(carousel);
+            elements.mobileCarousel.addEventListener('scroll', () => {
+                updateActiveDot();
             });
-            
-            elements.mobileLandscapeNewsContainer.appendChild(carousel);
-            elements.mobileLandscapeNewsContainer.appendChild(carouselNav);
             
             // Auto-scroll every 5 seconds
             let currentIndex = 0;
@@ -431,21 +420,20 @@
             }, 5000);
             
             // Clear interval when user interacts
-            carousel.addEventListener('touchstart', () => {
+            elements.mobileCarousel.addEventListener('touchstart', () => {
                 clearInterval(autoScroll);
             });
             
-            carousel.addEventListener('mousedown', () => {
+            elements.mobileCarousel.addEventListener('mousedown', () => {
                 clearInterval(autoScroll);
             });
         }
 
         function scrollToCarouselItem(index) {
-            const carousel = document.querySelector('.carousel');
             const item = document.querySelector(`.carousel-item[data-index="${index}"]`);
-            if (carousel && item) {
-                carousel.scrollTo({
-                    left: item.offsetLeft - carousel.offsetLeft,
+            if (item) {
+                elements.mobileCarousel.scrollTo({
+                    left: item.offsetLeft - elements.mobileCarousel.offsetLeft,
                     behavior: 'smooth'
                 });
                 
@@ -457,9 +445,9 @@
             }
         }
 
-        function updateActiveDot(carousel) {
-            const items = carousel.querySelectorAll('.carousel-item');
-            const scrollPosition = carousel.scrollLeft + carousel.offsetWidth / 2;
+        function updateActiveDot() {
+            const items = elements.mobileCarousel.querySelectorAll('.carousel-item');
+            const scrollPosition = elements.mobileCarousel.scrollLeft + elements.mobileCarousel.offsetWidth / 2;
             
             items.forEach(item => {
                 const itemStart = item.offsetLeft;
@@ -483,49 +471,19 @@
             `;
         }
 
-        function showMobileLandscapeError(message) {
-            elements.mobileLandscapeNewsContainer.innerHTML = `
+        function showMobileError(message) {
+            elements.mobileCarousel.innerHTML = `
                 <div class="error">
                     ${message}
                 </div>
             `;
         }
 
-        // Enhanced orientation change detection
-        function handleOrientationChange() {
-            if (window.innerWidth <= 600) {
-                const isLandscape = window.innerWidth > window.innerHeight;
-                if (isLandscape) {
-                    document.getElementById('newsContainer').style.display = 'none';
-                    document.getElementById('mobileLandscapeNewsContainer').style.display = 'block';
-                } else {
-                    document.getElementById('newsContainer').style.display = 'block';
-                    document.getElementById('mobileLandscapeNewsContainer').style.display = 'none';
-                }
-            } else {
-                document.getElementById('newsContainer').style.display = 'block';
-                document.getElementById('mobileLandscapeNewsContainer').style.display = 'none';
-            }
-        }
-
         // Event listeners
         elements.refreshBtn.addEventListener('click', fetchAllNews);
 
-        // Improved orientation change listener
-        window.addEventListener('resize', function() {
-            // Throttle the resize events
-            let resizeTimer;
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                handleOrientationChange();
-            }, 200);
-        });
-
         // Initial load
-        window.addEventListener('load', function() {
-            fetchAllNews();
-            handleOrientationChange();
-        });
+        window.addEventListener('load', fetchAllNews);
     </script>
 </body>
 </html>
