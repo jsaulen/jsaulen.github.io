@@ -102,8 +102,8 @@
             background-color: #27ae60;
         }
 
-        /* Mobile-specific styles */
-        @media (max-width: 600px) {
+        /* Mobile-specific styles - Horizontal orientation only */
+        @media (max-width: 600px) and (orientation: landscape) {
             body {
                 padding: 10px;
             }
@@ -162,13 +162,23 @@
                 display: none;
             }
             
-            .mobile-view {
+            .mobile-landscape-view {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 600px) and (orientation: portrait) {
+            .mobile-landscape-view {
+                display: none;
+            }
+            
+            .desktop-view {
                 display: block;
             }
         }
         
         @media (min-width: 601px) {
-            .mobile-view {
+            .mobile-landscape-view {
                 display: none;
             }
             
@@ -183,7 +193,7 @@
     <button class="refresh-btn" id="refreshBtn">Refresh News</button>
     
     <div class="news-container desktop-view" id="newsContainer"></div>
-    <div class="news-container mobile-view" id="mobileNewsContainer"></div>
+    <div class="news-container mobile-landscape-view" id="mobileLandscapeNewsContainer"></div>
 
     <script>
         // API configurations
@@ -236,14 +246,14 @@
         // DOM elements
         const elements = {
             newsContainer: document.getElementById('newsContainer'),
-            mobileNewsContainer: document.getElementById('mobileNewsContainer'),
+            mobileLandscapeNewsContainer: document.getElementById('mobileLandscapeNewsContainer'),
             refreshBtn: document.getElementById('refreshBtn')
         };
 
         // Fetch news from all APIs
         async function fetchAllNews() {
             elements.newsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
-            elements.mobileNewsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
+            elements.mobileLandscapeNewsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
             
             try {
                 const requests = APIS.map(api => {
@@ -269,7 +279,7 @@
                     .sort((a, b) => b.sortDate - a.sortDate);
                 
                 displayNews(allArticles);
-                displayMobileNews(allArticles);
+                displayMobileLandscapeNews(allArticles);
                 
             } catch (error) {
                 console.error('Combined fetch error:', error);
@@ -332,13 +342,13 @@
             });
         }
 
-        function displayMobileNews(articles) {
+        function displayMobileLandscapeNews(articles) {
             if (!articles || articles.length === 0) {
-                showMobileError('No news articles found about Manatee County. Please try refreshing.');
+                showMobileLandscapeError('No news articles found about Manatee County. Please try refreshing.');
                 return;
             }
             
-            elements.mobileNewsContainer.innerHTML = '';
+            elements.mobileLandscapeNewsContainer.innerHTML = '';
             
             // Create carousel container
             const carousel = document.createElement('div');
@@ -405,8 +415,8 @@
                 updateActiveDot(carousel);
             });
             
-            elements.mobileNewsContainer.appendChild(carousel);
-            elements.mobileNewsContainer.appendChild(carouselNav);
+            elements.mobileLandscapeNewsContainer.appendChild(carousel);
+            elements.mobileLandscapeNewsContainer.appendChild(carouselNav);
             
             // Auto-scroll every 5 seconds
             let currentIndex = 0;
@@ -468,8 +478,8 @@
             `;
         }
 
-        function showMobileError(message) {
-            elements.mobileNewsContainer.innerHTML = `
+        function showMobileLandscapeError(message) {
+            elements.mobileLandscapeNewsContainer.innerHTML = `
                 <div class="error">
                     ${message}
                 </div>
@@ -478,6 +488,12 @@
 
         // Event listeners
         elements.refreshBtn.addEventListener('click', fetchAllNews);
+
+        // Orientation change listener
+        window.addEventListener('orientationchange', function() {
+            // Wait a moment for the orientation to settle
+            setTimeout(fetchAllNews, 100);
+        });
 
         // Initial load
         window.addEventListener('load', fetchAllNews);
