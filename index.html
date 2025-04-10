@@ -52,12 +52,6 @@
             color: #7f8c8d;
             font-size: 0.85em;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-        .news-source::before {
-            content: "•";
-            margin: 0 5px;
         }
         .news-description {
             margin-bottom: 12px;
@@ -76,26 +70,11 @@
             font-size: 0.95em;
             line-height: 1.5;
         }
-        .load-more {
-            display: block;
-            width: 200px;
-            margin: 25px auto;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        .loading {
             text-align: center;
-            font-size: 1em;
-            transition: background-color 0.3s;
-        }
-        .load-more:hover {
-            background-color: #2980b9;
-        }
-        .load-more:disabled {
-            background-color: #bdc3c7;
-            cursor: not-allowed;
+            color: #7f8c8d;
+            margin: 30px 0;
+            font-style: italic;
         }
         .error {
             color: #e74c3c;
@@ -104,38 +83,6 @@
             background: #fdecea;
             border-radius: 5px;
             margin: 20px 0;
-        }
-        .loading {
-            text-align: center;
-            color: #7f8c8d;
-            margin: 30px 0;
-            font-style: italic;
-        }
-        .filter-container {
-            text-align: center;
-            margin: 25px 0;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .filter-container button {
-            margin: 0;
-            padding: 8px 15px;
-            background-color: #ecf0f1;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.3s;
-        }
-        .filter-container button:hover {
-            background-color: #dfe6e9;
-        }
-        .filter-container button.active {
-            background-color: #3498db;
-            color: white;
-            border-color: #3498db;
         }
         .refresh-btn {
             display: block;
@@ -154,55 +101,28 @@
         .refresh-btn:hover {
             background-color: #27ae60;
         }
-        @media (max-width: 600px) {
-            body {
-                padding: 15px;
-            }
-            .filter-container {
-                gap: 5px;
-            }
-            .filter-container button {
-                padding: 6px 12px;
-                font-size: 0.8em;
-            }
-        }
     </style>
 </head>
 <body>
     <h1>Manatee County News</h1>
     <button class="refresh-btn" id="refreshBtn">Refresh News</button>
     
-    <div class="filter-container" id="categoryFilter">
-        <button data-category="general" class="active">General</button>
-        <button data-category="business">Business</button>
-        <button data-category="technology">Technology</button>
-        <button data-category="sports">Sports</button>
-        <button data-category="health">Health</button>
-        <button data-category="science">Science</button>
-        <button data-category="entertainment">Entertainment</button>
-    </div>
-    
     <div class="news-container" id="newsContainer"></div>
-    <button class="load-more" id="loadMore">Load More News</button>
 
     <script>
-        // API configurations with secure fetching
+        // API configurations
         const APIS = [
             {
                 name: 'NewsData.io',
                 key: 'pub_790149e76fb69cdc140fba83cb01d75daeb52',
                 url: 'https://newsdata.io/api/1/news',
-                getParams: function(category) {
-                    const params = {
+                getParams: function() {
+                    return {
                         apikey: this.key,
                         language: 'en',
                         country: 'us',
                         q: '"Manatee County"'
                     };
-                    if (category && category !== 'general') {
-                        params.category = category;
-                    }
-                    return params;
                 },
                 parser: data => data.results || []
             },
@@ -210,17 +130,13 @@
                 name: 'TheNewsAPI',
                 key: '1gV8CxQYruyKQbholNiOYzHIKYsSyu7MHLZrQqQ7',
                 url: 'https://api.thenewsapi.com/v1/news/top',
-                getParams: function(category) {
-                    const params = {
+                getParams: function() {
+                    return {
                         api_token: this.key,
                         locale: 'us',
                         limit: '10',
                         search: '"Manatee County"'
                     };
-                    if (category && category !== 'general') {
-                        params.categories = category;
-                    }
-                    return params;
                 },
                 parser: data => data.data || []
             },
@@ -228,80 +144,34 @@
                 name: 'GNews',
                 key: 'adcf9e5aad86305b0464b0bb39d526bc',
                 url: 'https://gnews.io/api/v4/top-headlines',
-                getParams: function(category) {
-                    const params = {
+                getParams: function() {
+                    return {
                         apikey: this.key,
                         lang: 'en',
                         country: 'us',
                         max: '10',
                         q: '"Manatee County"'
                     };
-                    if (category && category !== 'general') {
-                        const validCategory = this.validateCategory(category);
-                        if (validCategory) params.topic = validCategory;
-                    }
-                    return params;
-                },
-                validateCategory: function(category) {
-                    const validMap = {
-                        business: 'business',
-                        entertainment: 'entertainment',
-                        health: 'health',
-                        science: 'science',
-                        sports: 'sports',
-                        technology: 'technology'
-                    };
-                    return validMap[category];
                 },
                 parser: data => data.articles || []
             }
         ];
 
-        // State management
-        const state = {
-            category: 'general',
-            isLoading: false,
-            currentPage: 1,
-            hasMoreArticles: true
-        };
-
         // DOM elements
         const elements = {
             newsContainer: document.getElementById('newsContainer'),
-            loadMoreBtn: document.getElementById('loadMore'),
-            refreshBtn: document.getElementById('refreshBtn'),
-            categoryFilter: document.getElementById('categoryFilter')
+            refreshBtn: document.getElementById('refreshBtn')
         };
 
-        // Secure fetch helper
-        async function secureFetch(url, params) {
-            try {
-                const response = await fetch(`${url}?${new URLSearchParams(params)}`, {
-                    credentials: 'omit', // Prevents cookie warnings
-                    referrerPolicy: 'no-referrer' // Enhances privacy
-                });
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return await response.json();
-            } catch (error) {
-                console.error('Fetch error:', error);
-                throw error;
-            }
-        }
-
-        // Main function to fetch news from all APIs
+        // Fetch news from all APIs
         async function fetchAllNews() {
-            if (state.isLoading) return;
-            
-            state.isLoading = true;
-            elements.loadMoreBtn.disabled = true;
             elements.newsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
             
             try {
                 const requests = APIS.map(api => {
-                    const params = api.getParams(state.category);
-                    return secureFetch(api.url, params)
+                    const params = api.getParams();
+                    return fetch(`${api.url}?${new URLSearchParams(params)}`)
+                        .then(response => response.json())
                         .then(data => ({
                             api: api.name,
                             articles: api.parser(data).map(article => ({
@@ -311,7 +181,7 @@
                             }))
                         }))
                         .catch(error => {
-                            console.error(`API Error (${api.name}):`, error.message);
+                            console.error(`API Error (${api.name}):`, error);
                             return { api: api.name, articles: [] };
                         });
                 });
@@ -325,9 +195,6 @@
             } catch (error) {
                 console.error('Combined fetch error:', error);
                 showError('Failed to load news. Please try again later.');
-            } finally {
-                state.isLoading = false;
-                elements.loadMoreBtn.disabled = false;
             }
         }
 
@@ -339,7 +206,7 @@
 
         function displayNews(articles) {
             if (!articles || articles.length === 0) {
-                showError('No news articles found about Manatee County. Try a different category or refresh.');
+                showError('No news articles found about Manatee County. Please try refreshing.');
                 return;
             }
             
@@ -394,33 +261,8 @@
             `;
         }
 
-        // Event handlers
-        function handleCategoryChange(e) {
-            if (e.target.tagName === 'BUTTON') {
-                document.querySelectorAll('.filter-container button')
-                    .forEach(btn => btn.classList.remove('active'));
-                e.target.classList.add('active');
-                
-                state.category = e.target.dataset.category;
-                state.currentPage = 1;
-                fetchAllNews();
-            }
-        }
-
-        function handleRefresh() {
-            state.currentPage = 1;
-            fetchAllNews();
-        }
-
-        function handleLoadMore() {
-            state.currentPage++;
-            fetchAllNews();
-        }
-
-        // Initialize event listeners
-        elements.categoryFilter.addEventListener('click', handleCategoryChange);
-        elements.refreshBtn.addEventListener('click', handleRefresh);
-        elements.loadMoreBtn.addEventListener('click', handleLoadMore);
+        // Event listeners
+        elements.refreshBtn.addEventListener('click', fetchAllNews);
 
         // Initial load
         window.addEventListener('load', fetchAllNews);
