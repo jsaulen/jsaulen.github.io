@@ -101,13 +101,89 @@
         .refresh-btn:hover {
             background-color: #27ae60;
         }
+
+        /* Mobile-specific styles */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .news-container {
+                padding: 10px;
+                overflow: hidden;
+            }
+            
+            .carousel {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+            }
+            
+            .carousel::-webkit-scrollbar {
+                display: none; /* Chrome/Safari */
+            }
+            
+            .carousel-item {
+                flex: 0 0 90%;
+                scroll-snap-align: start;
+                margin-right: 10px;
+                background: white;
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+            
+            .carousel-item:last-child {
+                margin-right: 0;
+            }
+            
+            .carousel-nav {
+                display: flex;
+                justify-content: center;
+                margin-top: 15px;
+            }
+            
+            .carousel-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #ddd;
+                margin: 0 5px;
+                cursor: pointer;
+            }
+            
+            .carousel-dot.active {
+                background: #2ecc71;
+            }
+            
+            .desktop-view {
+                display: none;
+            }
+            
+            .mobile-view {
+                display: block;
+            }
+        }
+        
+        @media (min-width: 601px) {
+            .mobile-view {
+                display: none;
+            }
+            
+            .desktop-view {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
     <h1>Manatee County News</h1>
     <button class="refresh-btn" id="refreshBtn">Refresh News</button>
     
-    <div class="news-container" id="newsContainer"></div>
+    <div class="news-container desktop-view" id="newsContainer"></div>
+    <div class="news-container mobile-view" id="mobileNewsContainer"></div>
 
     <script>
         // API configurations
@@ -160,12 +236,14 @@
         // DOM elements
         const elements = {
             newsContainer: document.getElementById('newsContainer'),
+            mobileNewsContainer: document.getElementById('mobileNewsContainer'),
             refreshBtn: document.getElementById('refreshBtn')
         };
 
         // Fetch news from all APIs
         async function fetchAllNews() {
             elements.newsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
+            elements.mobileNewsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
             
             try {
                 const requests = APIS.map(api => {
@@ -191,6 +269,7 @@
                     .sort((a, b) => b.sortDate - a.sortDate);
                 
                 displayNews(allArticles);
+                displayMobileNews(allArticles);
                 
             } catch (error) {
                 console.error('Combined fetch error:', error);
@@ -253,8 +332,144 @@
             });
         }
 
+        function displayMobileNews(articles) {
+            if (!articles || articles.length === 0) {
+                showMobileError('No news articles found about Manatee County. Please try refreshing.');
+                return;
+            }
+            
+            elements.mobileNewsContainer.innerHTML = '';
+            
+            // Create carousel container
+            const carousel = document.createElement('div');
+            carousel.className = 'carousel';
+            
+            // Create carousel items
+            articles.forEach((article, index) => {
+                const title = article.title || 'No title available';
+                const url = article.url || article.link || article.source?.url || '#';
+                const imageUrl = article.image_url || article.urlToImage || article.image;
+                const source = article.source?.name || article.source || article.source_id || 'Unknown source';
+                const description = article.description || 'No description available';
+                const content = article.content || article.snippet || '';
+                const dateStr = article.published_at || article.pubDate || article.publishedAt;
+                const date = dateStr ? new Date(dateStr) : null;
+                
+                const carouselItem = document.createElement('div');
+                carouselItem.className = 'carousel-item';
+                carouselItem.dataset.index = index;
+                
+                carouselItem.innerHTML = `
+                    ${imageUrl ? `
+                        <img src="${imageUrl}" alt="${title}" class="news-image" 
+                             loading="lazy" onerror="this.style.display='none'">
+                    ` : ''}
+                    <div class="news-title">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer">
+                            ${title}
+                        </a>
+                    </div>
+                    <div class="news-source">
+                        ${source} 
+                        ${date ? `• ${date.toLocaleDateString()} ${date.toLocaleTimeString()}` : ''}
+                    </div>
+                    <div class="news-description">
+                        ${description}
+                    </div>
+                    ${content ? `
+                        <div class="news-content">
+                            ${content.substring(0, 200)}${content.length > 200 ? '...' : ''}
+                        </div>
+                    ` : ''}
+                `;
+                
+                carousel.appendChild(carouselItem);
+            });
+            
+            // Create navigation dots
+            const carouselNav = document.createElement('div');
+            carouselNav.className = 'carousel-nav';
+            
+            articles.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'carousel-dot' + (index === 0 ? ' active' : '');
+                dot.dataset.index = index;
+                dot.addEventListener('click', () => {
+                    scrollToCarouselItem(index);
+                });
+                carouselNav.appendChild(dot);
+            });
+            
+            // Add scroll event listener to update active dot
+            carousel.addEventListener('scroll', () => {
+                updateActiveDot(carousel);
+            });
+            
+            elements.mobileNewsContainer.appendChild(carousel);
+            elements.mobileNewsContainer.appendChild(carouselNav);
+            
+            // Auto-scroll every 5 seconds
+            let currentIndex = 0;
+            const autoScroll = setInterval(() => {
+                currentIndex = (currentIndex + 1) % articles.length;
+                scrollToCarouselItem(currentIndex);
+            }, 5000);
+            
+            // Clear interval when user interacts
+            carousel.addEventListener('touchstart', () => {
+                clearInterval(autoScroll);
+            });
+            
+            carousel.addEventListener('mousedown', () => {
+                clearInterval(autoScroll);
+            });
+        }
+
+        function scrollToCarouselItem(index) {
+            const carousel = document.querySelector('.carousel');
+            const item = document.querySelector(`.carousel-item[data-index="${index}"]`);
+            if (carousel && item) {
+                carousel.scrollTo({
+                    left: item.offsetLeft - carousel.offsetLeft,
+                    behavior: 'smooth'
+                });
+                
+                // Update active dot
+                document.querySelectorAll('.carousel-dot').forEach(dot => {
+                    dot.classList.remove('active');
+                });
+                document.querySelector(`.carousel-dot[data-index="${index}"]`).classList.add('active');
+            }
+        }
+
+        function updateActiveDot(carousel) {
+            const items = carousel.querySelectorAll('.carousel-item');
+            const scrollPosition = carousel.scrollLeft + carousel.offsetWidth / 2;
+            
+            items.forEach(item => {
+                const itemStart = item.offsetLeft;
+                const itemEnd = itemStart + item.offsetWidth;
+                
+                if (scrollPosition >= itemStart && scrollPosition <= itemEnd) {
+                    const index = item.dataset.index;
+                    document.querySelectorAll('.carousel-dot').forEach(dot => {
+                        dot.classList.remove('active');
+                    });
+                    document.querySelector(`.carousel-dot[data-index="${index}"]`).classList.add('active');
+                }
+            });
+        }
+
         function showError(message) {
             elements.newsContainer.innerHTML = `
+                <div class="error">
+                    ${message}
+                </div>
+            `;
+        }
+
+        function showMobileError(message) {
+            elements.mobileNewsContainer.innerHTML = `
                 <div class="error">
                     ${message}
                 </div>
