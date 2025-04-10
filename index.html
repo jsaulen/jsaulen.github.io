@@ -68,11 +68,6 @@
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .news-content {
-            color: #555;
-            font-size: 0.95em;
-            line-height: 1.5;
-        }
         .loading {
             text-align: center;
             color: #7f8c8d;
@@ -313,7 +308,6 @@
                 const imageUrl = article.image_url || article.urlToImage || article.image;
                 const source = article.source?.name || article.source || article.source_id || 'Unknown source';
                 const description = article.description || 'No description available';
-                const content = article.content || article.snippet || '';
                 const dateStr = article.published_at || article.pubDate || article.publishedAt;
                 const date = dateStr ? new Date(dateStr) : null;
                 
@@ -334,11 +328,6 @@
                     <div class="news-description">
                         ${description}
                     </div>
-                    ${content ? `
-                        <div class="news-content">
-                            ${content.substring(0, 200)}${content.length > 200 ? '...' : ''}
-                        </div>
-                    ` : ''}
                 `;
                 
                 elements.newsContainer.appendChild(articleEl);
@@ -361,7 +350,6 @@
                 const imageUrl = article.image_url || article.urlToImage || article.image;
                 const source = article.source?.name || article.source || article.source_id || 'Unknown source';
                 const description = article.description || 'No description available';
-                const content = article.content || article.snippet || '';
                 const dateStr = article.published_at || article.pubDate || article.publishedAt;
                 const date = dateStr ? new Date(dateStr) : null;
                 
@@ -386,11 +374,6 @@
                     <div class="news-description">
                         ${description}
                     </div>
-                    ${content ? `
-                        <div class="news-content">
-                            ${content.substring(0, 200)}${content.length > 200 ? '...' : ''}
-                        </div>
-                    ` : ''}
                 `;
                 
                 elements.mobileCarousel.appendChild(carouselItem);
