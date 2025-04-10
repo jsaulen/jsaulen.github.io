@@ -3,601 +3,470 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://newsdata.io https://api.thenewsapi.com https://gnews.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://newsdata.io https://api.thenewsapi.com https://gnews.io; frame-src 'none'; object-src 'none'">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="X-Content-Type-Options" content="nosniff">
-    <meta name="X-Frame-Options" content="DENY">
-    <meta name="X-XSS-Protection" content="1; mode=block">
     <link rel="icon" href="data:,">
     <title>Manatee County News</title>
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #2ecc71;
-            --text-color: #333;
-            --light-gray: #f9f9f9;
-            --white: #ffffff;
-            --error-color: #e74c3c;
-            --safe-area-top: env(safe-area-inset-top, 0px);
-            --safe-area-right: env(safe-area-inset-right, 0px);
-            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-            --safe-area-left: env(safe-area-inset-left, 0px);
-        }
-        
-        /* Reset and base styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-            -webkit-text-size-adjust: 100%;
-        }
-        
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--light-gray);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
-            padding: var(--safe-area-top) var(--safe-area-right) var(--safe-area-bottom) var(--safe-area-left);
-        }
-        
-        /* App container */
-        #app {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            min-height: 100vh;
-        }
-        
-        /* Header */
-        header {
-            width: 100%;
-            background-color: var(--white);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            padding: 1rem;
-            text-align: center;
-        }
-        
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: clamp(1.5rem, 4vw, 2rem);
-        }
-        
-        /* Main content */
-        main {
-            flex: 1;
-            width: 100%;
-        }
-        
-        /* News containers */
-        .news-container {
-            width: 100%;
-            background: var(--white);
-        }
-        
-        .carousel-container {
-            width: 100%;
-            background: var(--white);
-            padding-bottom: 1rem;
-        }
-        
-        /* News items */
-        .news-item {
-            padding: 1.5rem;
-            border-bottom: 1px solid #eee;
-            max-width: 1200px;
+            font-family: Arial, sans-serif;
+            max-width: 800px;
             margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
         }
         
+        /* Desktop news container */
+        .desktop-view .news-container {
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .news-item {
+            border-bottom: 1px solid #eee;
+            padding: 20px 0;
+        }
+        .news-item:last-child {
+            border-bottom: none;
+        }
         .news-title {
-            font-size: 1.25rem;
+            font-size: 1.2em;
             font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: var(--primary-color);
+            margin-bottom: 8px;
+            color: #2c3e50;
         }
-        
         .news-title a {
-            color: inherit;
+            color: #2c3e50;
             text-decoration: none;
         }
-        
         .news-title a:hover {
+            color: #007bff;
             text-decoration: underline;
         }
-        
         .news-source {
             color: #7f8c8d;
-            font-size: 0.875rem;
-            margin-bottom: 0.75rem;
+            font-size: 0.85em;
+            margin-bottom: 10px;
         }
-        
         .news-description {
-            margin-bottom: 1rem;
+            margin-bottom: 12px;
             color: #34495e;
+            line-height: 1.5;
         }
-        
         .news-image {
-            width: 100%;
-            max-height: 300px;
-            object-fit: cover;
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 15px;
             border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-        
-        /* Mobile carousel */
-        .carousel {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            gap: 1rem;
-            padding: 0 1rem 1rem;
-        }
-        
-        .carousel::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .carousel-item {
-            flex: 0 0 90%;
-            scroll-snap-align: start;
-            background: var(--white);
-            padding: 1rem;
-            border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        
-        .carousel-nav {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            margin: 30px 0;
+            font-style: italic;
         }
-        
-        .carousel-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #ddd;
-            cursor: pointer;
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            padding: 15px;
+            background: #fdecea;
+            border-radius: 5px;
+            margin: 20px 0;
         }
-        
-        .carousel-dot.active {
-            background: var(--secondary-color);
-        }
-        
-        /* Buttons */
         .refresh-btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            background-color: var(--secondary-color);
+            display: block;
+            width: 200px;
+            margin: 0 auto 25px;
+            padding: 12px;
+            background-color: #2ecc71;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.2s;
+            text-align: center;
+            font-size: 1em;
+            transition: background-color 0.3s;
         }
-        
         .refresh-btn:hover {
             background-color: #27ae60;
         }
-        
-        /* States */
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: #7f8c8d;
-        }
-        
-        .error {
-            text-align: center;
-            padding: 1.5rem;
-            background: #fdecea;
-            color: var(--error-color);
-        }
-        
-        /* Responsive */
-        @media (min-width: 769px) {
-            .mobile-view {
-                display: none;
+
+        /* Mobile carousel styles (applies to all mobile devices) */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
             }
-        }
-        
-        @media (max-width: 768px) {
+            
             .desktop-view {
                 display: none;
             }
             
-            .news-item {
-                padding: 1rem;
+            .mobile-view {
+                display: block;
+                margin-top: 15px;
+            }
+            
+            .carousel-container {
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                padding: 10px;
+            }
+            
+            .carousel {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: 15px;
+                padding-bottom: 10px;
+            }
+            
+            .carousel::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .carousel-item {
+                flex: 0 0 85%;
+                scroll-snap-align: start;
+                background: white;
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            
+            .carousel-nav {
+                display: flex;
+                justify-content: center;
+                margin-top: 15px;
+            }
+            
+            .carousel-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #ddd;
+                margin: 0 5px;
+                cursor: pointer;
+            }
+            
+            .carousel-dot.active {
+                background: #2ecc71;
+            }
+        }
+        
+        /* Desktop styles */
+        @media (min-width: 601px) {
+            .mobile-view {
+                display: none;
+            }
+            
+            .desktop-view {
+                display: block;
             }
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>Manatee County News</h1>
-            <button class="refresh-btn" id="refreshBtn">Refresh News</button>
-        </header>
-        
-        <main>
-            <div class="desktop-view">
-                <div class="news-container" id="newsContainer"></div>
-            </div>
-            
-            <div class="mobile-view">
-                <div class="carousel-container">
-                    <div class="carousel" id="mobileCarousel"></div>
-                    <div class="carousel-nav" id="carouselNav"></div>
-                </div>
-            </div>
-        </main>
+    <h1>Manatee County News</h1>
+    <button class="refresh-btn" id="refreshBtn">Refresh News</button>
+    
+    <div class="desktop-view">
+        <div class="news-container" id="newsContainer"></div>
+    </div>
+    
+    <div class="mobile-view">
+        <div class="carousel-container">
+            <div class="carousel" id="mobileCarousel"></div>
+            <div class="carousel-nav" id="carouselNav"></div>
+        </div>
     </div>
 
     <script>
-        (function() {
-            'use strict';
-            
-            class NewsApp {
-                constructor() {
-                    // API configuration with error handling
-                    this.APIS = this.getApiConfig();
-                    this.currentArticles = [];
-                    this.autoScrollInterval = null;
-                    this.isFetching = false;
-                    
-                    this.initElements();
-                    this.initEventListeners();
-                    this.fetchAllNews();
-                }
-                
-                getApiConfig() {
-                    return [
-                        {
-                            name: 'NewsData.io',
-                            key: 'pub_790149e76fb69cdc140fba83cb01d75daeb52',
-                            url: 'https://newsdata.io/api/1/news',
-                            getParams: () => ({
-                                apikey: this.key,
-                                language: 'en',
-                                country: 'us',
-                                q: '"Manatee County"'
-                            }),
-                            parser: data => {
-                                try {
-                                    return data.results || [];
-                                } catch (e) {
-                                    console.error('NewsData.io parsing error:', e);
-                                    return [];
-                                }
-                            }
-                        },
-                        {
-                            name: 'TheNewsAPI',
-                            key: '1gV8CxQYruyKQbholNiOYzHIKYsSyu7MHLZrQqQ7',
-                            url: 'https://api.thenewsapi.com/v1/news/top',
-                            getParams: () => ({
-                                api_token: this.key,
-                                locale: 'us',
-                                limit: '10',
-                                search: '"Manatee County"'
-                            }),
-                            parser: data => {
-                                try {
-                                    return data.data || [];
-                                } catch (e) {
-                                    console.error('TheNewsAPI parsing error:', e);
-                                    return [];
-                                }
-                            }
-                        },
-                        {
-                            name: 'GNews',
-                            key: 'adcf9e5aad86305b0464b0bb39d526bc',
-                            url: 'https://gnews.io/api/v4/top-headlines',
-                            getParams: () => ({
-                                apikey: this.key,
-                                lang: 'en',
-                                country: 'us',
-                                max: '10',
-                                q: '"Manatee County"'
-                            }),
-                            parser: data => {
-                                try {
-                                    return data.articles || [];
-                                } catch (e) {
-                                    console.error('GNews parsing error:', e);
-                                    return [];
-                                }
-                            }
-                        }
-                    ];
-                }
-                
-                initElements() {
-                    this.elements = {
-                        newsContainer: document.getElementById('newsContainer'),
-                        mobileCarousel: document.getElementById('mobileCarousel'),
-                        carouselNav: document.getElementById('carouselNav'),
-                        refreshBtn: document.getElementById('refreshBtn'),
-                        desktopView: document.querySelector('.desktop-view'),
-                        mobileView: document.querySelector('.mobile-view')
-                    };
-                }
-                
-                initEventListeners() {
-                    this.elements.refreshBtn.addEventListener('click', () => {
-                        if (!this.isFetching) {
-                            this.fetchAllNews();
-                        }
-                    });
-                    
-                    window.addEventListener('resize', this.debounce(() => {
-                        if (window.innerWidth <= 768 && this.elements.desktopView.style.display !== 'none') {
-                            this.renderMobileCarousel();
-                        } else if (window.innerWidth > 768 && this.elements.mobileView.style.display !== 'none') {
-                            this.renderDesktopView();
-                        }
-                    }, 200));
-                }
-                
-                async fetchAllNews() {
-                    if (this.isFetching) return;
-                    
-                    this.isFetching = true;
-                    this.showLoading();
-                    
-                    try {
-                        const requests = this.APIS.map(api => {
-                            const params = api.getParams();
-                            const url = `${api.url}?${new URLSearchParams(params)}`;
-                            
-                            return fetch(url, {
-                                headers: {
-                                    'Accept': 'application/json'
-                                },
-                                referrerPolicy: 'strict-origin-when-cross-origin'
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! status: ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then(data => ({
-                                api: api.name,
-                                articles: api.parser(data).map(article => ({
-                                    ...this.sanitizeArticle(article),
-                                    sourceApi: api.name,
-                                    sortDate: this.getSortableDate(article)
-                                }))
-                            }))
-                            .catch(error => {
-                                console.error(`API Error (${api.name}):`, error);
-                                return { api: api.name, articles: [] };
-                            });
-                        });
-                        
-                        const results = await Promise.all(requests);
-                        this.currentArticles = results.flatMap(r => r.articles)
-                            .sort((a, b) => b.sortDate - a.sortDate);
-                        
-                        this.renderNews();
-                    } catch (error) {
-                        console.error('Combined fetch error:', error);
-                        this.showError('Failed to load news. Please try again later.');
-                    } finally {
-                        this.isFetching = false;
-                    }
-                }
-                
-                sanitizeArticle(article) {
-                    // Basic XSS protection
-                    const sanitize = (str) => {
-                        if (!str) return '';
-                        return str.toString()
-                            .replace(/</g, '&lt;')
-                            .replace(/>/g, '&gt;');
-                    };
-                    
+        // API configurations
+        const APIS = [
+            {
+                name: 'NewsData.io',
+                key: 'pub_790149e76fb69cdc140fba83cb01d75daeb52',
+                url: 'https://newsdata.io/api/1/news',
+                getParams: function() {
                     return {
-                        title: sanitize(article.title),
-                        url: sanitize(article.url || article.link || article.source?.url),
-                        image_url: sanitize(article.image_url || article.urlToImage || article.image),
-                        source: {
-                            name: sanitize(article.source?.name || article.source || article.source_id)
-                        },
-                        description: sanitize(article.description),
-                        published_at: article.published_at || article.pubDate || article.publishedAt
+                        apikey: this.key,
+                        language: 'en',
+                        country: 'us',
+                        q: '"Manatee County"'
                     };
-                }
-                
-                renderNews() {
-                    if (!this.currentArticles || this.currentArticles.length === 0) {
-                        this.showError('No news articles found about Manatee County. Please try refreshing.');
-                        return;
-                    }
-                    
-                    if (window.innerWidth <= 768) {
-                        this.renderMobileCarousel();
-                    } else {
-                        this.renderDesktopView();
-                    }
-                }
-                
-                renderDesktopView() {
-                    this.elements.desktopView.style.display = 'block';
-                    this.elements.mobileView.style.display = 'none';
-                    
-                    this.elements.newsContainer.innerHTML = this.currentArticles.map(article => `
-                        <div class="news-item">
-                            ${article.image_url ? `
-                                <img src="${article.image_url}" alt="${article.title}" class="news-image" 
-                                     loading="lazy" onerror="this.style.display='none'">
-                            ` : ''}
-                            <div class="news-title">
-                                <a href="${article.url || '#'}" target="_blank" rel="noopener noreferrer">
-                                    ${article.title || 'No title available'}
-                                </a>
-                            </div>
-                            <div class="news-source">
-                                ${article.source.name || 'Unknown source'}
-                                ${article.published_at ? `• ${new Date(article.published_at).toLocaleString()}` : ''}
-                            </div>
-                            <div class="news-description">
-                                ${article.description || 'No description available'}
-                            </div>
-                        </div>
-                    `).join('');
-                }
-                
-                renderMobileCarousel() {
-                    this.elements.desktopView.style.display = 'none';
-                    this.elements.mobileView.style.display = 'block';
-                    
-                    this.elements.mobileCarousel.innerHTML = this.currentArticles.map((article, index) => `
-                        <div class="carousel-item" data-index="${index}">
-                            ${article.image_url ? `
-                                <img src="${article.image_url}" alt="${article.title}" class="news-image" 
-                                     loading="lazy" onerror="this.style.display='none'">
-                            ` : ''}
-                            <div class="news-title">
-                                <a href="${article.url || '#'}" target="_blank" rel="noopener noreferrer">
-                                    ${article.title || 'No title available'}
-                                </a>
-                            </div>
-                            <div class="news-source">
-                                ${article.source.name || 'Unknown source'}
-                                ${article.published_at ? `• ${new Date(article.published_at).toLocaleDateString()}` : ''}
-                            </div>
-                            <div class="news-description">
-                                ${article.description || 'No description available'}
-                            </div>
-                        </div>
-                    `).join('');
-                    
-                    this.renderCarouselDots();
-                    this.setupCarousel();
-                }
-                
-                renderCarouselDots() {
-                    this.elements.carouselNav.innerHTML = this.currentArticles
-                        .map((_, index) => 
-                            `<div class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>`
-                        ).join('');
-                    
-                    document.querySelectorAll('.carousel-dot').forEach(dot => {
-                        dot.addEventListener('click', () => {
-                            this.scrollToCarouselItem(parseInt(dot.dataset.index));
-                        });
-                    });
-                }
-                
-                setupCarousel() {
-                    if (this.autoScrollInterval) {
-                        clearInterval(this.autoScrollInterval);
-                    }
-                    
-                    this.elements.mobileCarousel.addEventListener('scroll', () => {
-                        this.updateActiveDot();
-                    });
-                    
-                    let currentIndex = 0;
-                    this.autoScrollInterval = setInterval(() => {
-                        currentIndex = (currentIndex + 1) % this.currentArticles.length;
-                        this.scrollToCarouselItem(currentIndex);
-                    }, 5000);
-                    
-                    const stopAutoScroll = () => {
-                        clearInterval(this.autoScrollInterval);
+                },
+                parser: data => data.results || []
+            },
+            {
+                name: 'TheNewsAPI',
+                key: '1gV8CxQYruyKQbholNiOYzHIKYsSyu7MHLZrQqQ7',
+                url: 'https://api.thenewsapi.com/v1/news/top',
+                getParams: function() {
+                    return {
+                        api_token: this.key,
+                        locale: 'us',
+                        limit: '10',
+                        search: '"Manatee County"'
                     };
-                    
-                    this.elements.mobileCarousel.addEventListener('touchstart', stopAutoScroll);
-                    this.elements.mobileCarousel.addEventListener('mousedown', stopAutoScroll);
-                }
-                
-                scrollToCarouselItem(index) {
-                    const item = document.querySelector(`.carousel-item[data-index="${index}"]`);
-                    if (item) {
-                        this.elements.mobileCarousel.scrollTo({
-                            left: item.offsetLeft - this.elements.mobileCarousel.offsetLeft,
-                            behavior: 'smooth'
-                        });
-                        
-                        document.querySelectorAll('.carousel-dot').forEach(dot => {
-                            dot.classList.remove('active');
-                        });
-                        document.querySelector(`.carousel-dot[data-index="${index}"]`).classList.add('active');
-                    }
-                }
-                
-                updateActiveDot() {
-                    const items = this.elements.mobileCarousel.querySelectorAll('.carousel-item');
-                    const scrollPosition = this.elements.mobileCarousel.scrollLeft + this.elements.mobileCarousel.offsetWidth / 2;
-                    
-                    items.forEach(item => {
-                        const itemStart = item.offsetLeft;
-                        const itemEnd = itemStart + item.offsetWidth;
-                        
-                        if (scrollPosition >= itemStart && scrollPosition <= itemEnd) {
-                            const index = item.dataset.index;
-                            document.querySelectorAll('.carousel-dot').forEach(dot => {
-                                dot.classList.remove('active');
-                            });
-                            document.querySelector(`.carousel-dot[data-index="${index}"]`).classList.add('active');
-                        }
-                    });
-                }
-                
-                showLoading() {
-                    this.elements.newsContainer.innerHTML = '<div class="loading">Loading latest news...</div>';
-                    this.elements.mobileCarousel.innerHTML = '<div class="loading">Loading latest news...</div>';
-                }
-                
-                showError(message) {
-                    this.elements.newsContainer.innerHTML = `<div class="error">${message}</div>`;
-                    this.elements.mobileCarousel.innerHTML = `<div class="error">${message}</div>`;
-                }
-                
-                getSortableDate(article) {
-                    const dateStr = article.published_at || article.pubDate || article.publishedAt;
-                    return dateStr ? new Date(dateStr).getTime() : 0;
-                }
-                
-                debounce(func, wait) {
-                    let timeout;
-                    return function() {
-                        const context = this;
-                        const args = arguments;
-                        clearTimeout(timeout);
-                        timeout = setTimeout(() => {
-                            func.apply(context, args);
-                        }, wait);
+                },
+                parser: data => data.data || []
+            },
+            {
+                name: 'GNews',
+                key: 'adcf9e5aad86305b0464b0bb39d526bc',
+                url: 'https://gnews.io/api/v4/top-headlines',
+                getParams: function() {
+                    return {
+                        apikey: this.key,
+                        lang: 'en',
+                        country: 'us',
+                        max: '10',
+                        q: '"Manatee County"'
                     };
-                }
+                },
+                parser: data => data.articles || []
+            }
+        ];
+
+        // DOM elements
+        const elements = {
+            newsContainer: document.getElementById('newsContainer'),
+            mobileCarousel: document.getElementById('mobileCarousel'),
+            carouselNav: document.getElementById('carouselNav'),
+            refreshBtn: document.getElementById('refreshBtn')
+        };
+
+        // Fetch news from all APIs
+        async function fetchAllNews() {
+            elements.newsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
+            elements.mobileCarousel.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
+            
+            try {
+                const requests = APIS.map(api => {
+                    const params = api.getParams();
+                    return fetch(`${api.url}?${new URLSearchParams(params)}`)
+                        .then(response => response.json())
+                        .then(data => ({
+                            api: api.name,
+                            articles: api.parser(data).map(article => ({
+                                ...article,
+                                sourceApi: api.name,
+                                sortDate: getSortableDate(article)
+                            }))
+                        }))
+                        .catch(error => {
+                            console.error(`API Error (${api.name}):`, error);
+                            return { api: api.name, articles: [] };
+                        });
+                });
+                
+                const results = await Promise.all(requests);
+                const allArticles = results.flatMap(r => r.articles)
+                    .sort((a, b) => b.sortDate - a.sortDate);
+                
+                displayNews(allArticles);
+                displayMobileCarousel(allArticles);
+                
+            } catch (error) {
+                console.error('Combined fetch error:', error);
+                showError('Failed to load news. Please try again later.');
+            }
+        }
+
+        // Helper functions
+        function getSortableDate(article) {
+            const dateStr = article.published_at || article.pubDate || article.publishedAt;
+            return dateStr ? new Date(dateStr).getTime() : 0;
+        }
+
+        function displayNews(articles) {
+            if (!articles || articles.length === 0) {
+                showError('No news articles found about Manatee County. Please try refreshing.');
+                return;
             }
             
-            // Initialize the app
-            document.addEventListener('DOMContentLoaded', () => {
-                new NewsApp();
+            elements.newsContainer.innerHTML = '';
+            
+            articles.forEach(article => {
+                const articleEl = document.createElement('div');
+                articleEl.className = 'news-item';
+                
+                const title = article.title || 'No title available';
+                const url = article.url || article.link || article.source?.url || '#';
+                const imageUrl = article.image_url || article.urlToImage || article.image;
+                const source = article.source?.name || article.source || article.source_id || 'Unknown source';
+                const description = article.description || 'No description available';
+                const dateStr = article.published_at || article.pubDate || article.publishedAt;
+                const date = dateStr ? new Date(dateStr) : null;
+                
+                articleEl.innerHTML = `
+                    ${imageUrl ? `
+                        <img src="${imageUrl}" alt="${title}" class="news-image" 
+                             loading="lazy" onerror="this.style.display='none'">
+                    ` : ''}
+                    <div class="news-title">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer">
+                            ${title}
+                        </a>
+                    </div>
+                    <div class="news-source">
+                        ${source} 
+                        ${date ? `• ${date.toLocaleDateString()} ${date.toLocaleTimeString()}` : ''}
+                    </div>
+                    <div class="news-description">
+                        ${description}
+                    </div>
+                `;
+                
+                elements.newsContainer.appendChild(articleEl);
             });
-        })();
+        }
+
+        function displayMobileCarousel(articles) {
+            if (!articles || articles.length === 0) {
+                showMobileError('No news articles found about Manatee County. Please try refreshing.');
+                return;
+            }
+            
+            elements.mobileCarousel.innerHTML = '';
+            elements.carouselNav.innerHTML = '';
+            
+            // Create carousel items
+            articles.forEach((article, index) => {
+                const title = article.title || 'No title available';
+                const url = article.url || article.link || article.source?.url || '#';
+                const imageUrl = article.image_url || article.urlToImage || article.image;
+                const source = article.source?.name || article.source || article.source_id || 'Unknown source';
+                const description = article.description || 'No description available';
+                const dateStr = article.published_at || article.pubDate || article.publishedAt;
+                const date = dateStr ? new Date(dateStr) : null;
+                
+                const carouselItem = document.createElement('div');
+                carouselItem.className = 'carousel-item';
+                carouselItem.dataset.index = index;
+                
+                carouselItem.innerHTML = `
+                    ${imageUrl ? `
+                        <img src="${imageUrl}" alt="${title}" class="news-image" 
+                             loading="lazy" onerror="this.style.display='none'">
+                    ` : ''}
+                    <div class="news-title">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer">
+                            ${title}
+                        </a>
+                    </div>
+                    <div class="news-source">
+                        ${source} 
+                        ${date ? `• ${date.toLocaleDateString()} ${date.toLocaleTimeString()}` : ''}
+                    </div>
+                    <div class="news-description">
+                        ${description}
+                    </div>
+                `;
+                
+                elements.mobileCarousel.appendChild(carouselItem);
+            });
+            
+            // Create navigation dots
+            articles.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'carousel-dot' + (index === 0 ? ' active' : '');
+                dot.dataset.index = index;
+                dot.addEventListener('click', () => {
+                    scrollToCarouselItem(index);
+                });
+                elements.carouselNav.appendChild(dot);
+            });
+            
+            // Add scroll event listener to update active dot
+            elements.mobileCarousel.addEventListener('scroll', () => {
+                updateActiveDot();
+            });
+            
+            // Auto-scroll every 5 seconds
+            let currentIndex = 0;
+            const autoScroll = setInterval(() => {
+                currentIndex = (currentIndex + 1) % articles.length;
+                scrollToCarouselItem(currentIndex);
+            }, 5000);
+            
+            // Clear interval when user interacts
+            elements.mobileCarousel.addEventListener('touchstart', () => {
+                clearInterval(autoScroll);
+            });
+            
+            elements.mobileCarousel.addEventListener('mousedown', () => {
+                clearInterval(autoScroll);
+            });
+        }
+
+        function scrollToCarouselItem(index) {
+            const item = document.querySelector(`.carousel-item[data-index="${index}"]`);
+            if (item) {
+                elements.mobileCarousel.scrollTo({
+                    left: item.offsetLeft - elements.mobileCarousel.offsetLeft,
+                    behavior: 'smooth'
+                });
+                
+                // Update active dot
+                document.querySelectorAll('.carousel-dot').forEach(dot => {
+                    dot.classList.remove('active');
+                });
+                document.querySelector(`.carousel-dot[data-index="${index}"]`).classList.add('active');
+            }
+        }
+
+        function updateActiveDot() {
+            const items = elements.mobileCarousel.querySelectorAll('.carousel-item');
+            const scrollPosition = elements.mobileCarousel.scrollLeft + elements.mobileCarousel.offsetWidth / 2;
+            
+            items.forEach(item => {
+                const itemStart = item.offsetLeft;
+                const itemEnd = itemStart + item.offsetWidth;
+                
+                if (scrollPosition >= itemStart && scrollPosition <= itemEnd) {
+                    const index = item.dataset.index;
+                    document.querySelectorAll('.carousel-dot').forEach(dot => {
+                        dot.classList.remove('active');
+                    });
+                    document.querySelector(`.carousel-dot[data-index="${index}"]`).classList.add('active');
+                }
+            });
+        }
+
+        function showError(message) {
+            elements.newsContainer.innerHTML = `
+                <div class="error">
+                    ${message}
+                </div>
+            `;
+        }
+
+        function showMobileError(message) {
+            elements.mobileCarousel.innerHTML = `
+                <div class="error">
+                    ${message}
+                </div>
+            `;
+        }
+
+        // Event listeners
+        elements.refreshBtn.addEventListener('click', fetchAllNews);
+
+        // Initial load
+        window.addEventListener('load', fetchAllNews);
     </script>
 </body>
 </html>
