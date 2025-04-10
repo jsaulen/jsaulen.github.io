@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="data:,"> <!-- Prevents favicon 404 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="data:,">
     <title>Manatee County News</title>
     <style>
         body {
@@ -102,81 +102,85 @@
             background-color: #27ae60;
         }
 
-        /* Mobile-specific styles - Horizontal orientation only */
-        @media (max-width: 600px) and (orientation: landscape) {
+        /* Mobile-first approach with orientation detection */
+        @media (max-width: 600px) {
+            /* Default mobile styles (portrait) */
+            .mobile-landscape-view {
+                display: none;
+            }
+            
+            .desktop-view {
+                display: block;
+            }
+            
             body {
                 padding: 10px;
             }
             
             .news-container {
                 padding: 10px;
-                overflow: hidden;
             }
             
-            .carousel {
-                display: flex;
-                overflow-x: auto;
-                scroll-snap-type: x mandatory;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none; /* Firefox */
-            }
-            
-            .carousel::-webkit-scrollbar {
-                display: none; /* Chrome/Safari */
-            }
-            
-            .carousel-item {
-                flex: 0 0 90%;
-                scroll-snap-align: start;
-                margin-right: 10px;
-                background: white;
-                border-radius: 8px;
-                padding: 15px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            }
-            
-            .carousel-item:last-child {
-                margin-right: 0;
-            }
-            
-            .carousel-nav {
-                display: flex;
-                justify-content: center;
-                margin-top: 15px;
-            }
-            
-            .carousel-dot {
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                background: #ddd;
-                margin: 0 5px;
-                cursor: pointer;
-            }
-            
-            .carousel-dot.active {
-                background: #2ecc71;
-            }
-            
-            .desktop-view {
-                display: none;
-            }
-            
-            .mobile-landscape-view {
-                display: block;
+            /* Landscape overrides */
+            @media (orientation: landscape) {
+                .news-container {
+                    overflow: hidden;
+                    padding: 10px;
+                }
+                
+                .carousel {
+                    display: flex;
+                    overflow-x: auto;
+                    scroll-snap-type: x mandatory;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
+                }
+                
+                .carousel::-webkit-scrollbar {
+                    display: none;
+                }
+                
+                .carousel-item {
+                    flex: 0 0 90%;
+                    scroll-snap-align: start;
+                    margin-right: 10px;
+                    background: white;
+                    border-radius: 8px;
+                    padding: 15px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    border-bottom: none;
+                }
+                
+                .desktop-view {
+                    display: none;
+                }
+                
+                .mobile-landscape-view {
+                    display: block;
+                }
+                
+                .carousel-nav {
+                    display: flex;
+                    justify-content: center;
+                    margin-top: 15px;
+                }
+                
+                .carousel-dot {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    background: #ddd;
+                    margin: 0 5px;
+                    cursor: pointer;
+                }
+                
+                .carousel-dot.active {
+                    background: #2ecc71;
+                }
             }
         }
         
-        @media (max-width: 600px) and (orientation: portrait) {
-            .mobile-landscape-view {
-                display: none;
-            }
-            
-            .desktop-view {
-                display: block;
-            }
-        }
-        
+        /* Desktop styles */
         @media (min-width: 601px) {
             .mobile-landscape-view {
                 display: none;
@@ -486,17 +490,41 @@
             `;
         }
 
+        // Enhanced orientation change detection
+        function handleOrientationChange() {
+            if (window.innerWidth <= 600) {
+                const isLandscape = window.innerWidth > window.innerHeight;
+                if (isLandscape) {
+                    document.getElementById('newsContainer').style.display = 'none';
+                    document.getElementById('mobileLandscapeNewsContainer').style.display = 'block';
+                } else {
+                    document.getElementById('newsContainer').style.display = 'block';
+                    document.getElementById('mobileLandscapeNewsContainer').style.display = 'none';
+                }
+            } else {
+                document.getElementById('newsContainer').style.display = 'block';
+                document.getElementById('mobileLandscapeNewsContainer').style.display = 'none';
+            }
+        }
+
         // Event listeners
         elements.refreshBtn.addEventListener('click', fetchAllNews);
 
-        // Orientation change listener
-        window.addEventListener('orientationchange', function() {
-            // Wait a moment for the orientation to settle
-            setTimeout(fetchAllNews, 100);
+        // Improved orientation change listener
+        window.addEventListener('resize', function() {
+            // Throttle the resize events
+            let resizeTimer;
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                handleOrientationChange();
+            }, 200);
         });
 
         // Initial load
-        window.addEventListener('load', fetchAllNews);
+        window.addEventListener('load', function() {
+            fetchAllNews();
+            handleOrientationChange();
+        });
     </script>
 </body>
 </html>
