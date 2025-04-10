@@ -145,6 +145,13 @@
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
             
+            /* For very small screens (under 400px) */
+            @media (max-width: 400px) {
+                .carousel-item {
+                    flex: 0 0 92%;
+                }
+            }
+            
             .carousel-nav {
                 display: flex;
                 justify-content: center;
@@ -248,6 +255,14 @@
             refreshBtn: document.getElementById('refreshBtn')
         };
 
+        // Carousel state
+        const carouselState = {
+            autoScrollInterval: null,
+            currentIndex: 0,
+            isTouchDevice: false,
+            isSmallScreen: window.innerWidth <= 400
+        };
+
         // Fetch news from all APIs
         async function fetchAllNews() {
             elements.newsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
@@ -277,7 +292,7 @@
                     .sort((a, b) => b.sortDate - a.sortDate);
                 
                 displayNews(allArticles);
-                displayMobileCarousel(allArticles);
+                setupMobileCarousel(allArticles);
                 
             } catch (error) {
                 console.error('Combined fetch error:', error);
@@ -334,7 +349,7 @@
             });
         }
 
-        function displayMobileCarousel(articles) {
+        function setupMobileCarousel(articles) {
             if (!articles || articles.length === 0) {
                 showMobileError('No news articles found about Manatee County. Please try refreshing.');
                 return;
@@ -390,26 +405,75 @@
                 elements.carouselNav.appendChild(dot);
             });
             
+            // Initialize carousel behavior based on viewport width
+            initCarouselBehavior();
+            
+            // Set up auto-scroll if not a touch device
+            if (!carouselState.isTouchDevice) {
+                startAutoScroll();
+            }
+            
+            // Add event listeners for touch/mouse interactions
+            setupCarouselInteractions();
+        }
+
+        function initCarouselBehavior() {
+            // Check if it's a touch device
+            carouselState.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
+            // Check viewport width
+            const viewportWidth = window.innerWidth;
+            carouselState.isSmallScreen = viewportWidth <= 400;
+            
+            // Adjust carousel item width based on screen size
+            const carouselItems = document.querySelectorAll('.carousel-item');
+            carouselItems.forEach(item => {
+                item.style.flex = carouselState.isSmallScreen ? '0 0 92%' : '0 0 85%';
+            });
+        }
+
+        function setupCarouselInteractions() {
+            // Clear any existing interval
+            if (carouselState.autoScrollInterval) {
+                clearInterval(carouselState.autoScrollInterval);
+            }
+            
             // Add scroll event listener to update active dot
             elements.mobileCarousel.addEventListener('scroll', () => {
                 updateActiveDot();
             });
             
-            // Auto-scroll every 5 seconds
-            let currentIndex = 0;
-            const autoScroll = setInterval(() => {
-                currentIndex = (currentIndex + 1) % articles.length;
-                scrollToCarouselItem(currentIndex);
+            // Add interaction events to pause auto-scroll
+            const pauseAutoScroll = () => {
+                if (carouselState.autoScrollInterval) {
+                    clearInterval(carouselState.autoScrollInterval);
+                    carouselState.autoScrollInterval = null;
+                }
+                
+                // Resume after 10 seconds of inactivity
+                setTimeout(() => {
+                    if (!carouselState.autoScrollInterval && !carouselState.isTouchDevice) {
+                        startAutoScroll();
+                    }
+                }, 10000);
+            };
+            
+            elements.mobileCarousel.addEventListener('touchstart', pauseAutoScroll);
+            elements.mobileCarousel.addEventListener('mousedown', pauseAutoScroll);
+        }
+
+        function startAutoScroll() {
+            if (carouselState.autoScrollInterval) {
+                clearInterval(carouselState.autoScrollInterval);
+            }
+            
+            const articles = document.querySelectorAll('.carousel-item');
+            if (articles.length === 0) return;
+            
+            carouselState.autoScrollInterval = setInterval(() => {
+                carouselState.currentIndex = (carouselState.currentIndex + 1) % articles.length;
+                scrollToCarouselItem(carouselState.currentIndex);
             }, 5000);
-            
-            // Clear interval when user interacts
-            elements.mobileCarousel.addEventListener('touchstart', () => {
-                clearInterval(autoScroll);
-            });
-            
-            elements.mobileCarousel.addEventListener('mousedown', () => {
-                clearInterval(autoScroll);
-            });
         }
 
         function scrollToCarouselItem(index) {
@@ -425,6 +489,9 @@
                     dot.classList.remove('active');
                 });
                 document.querySelector(`.carousel-dot[data-index="${index}"]`).classList.add('active');
+                
+                // Update current index
+                carouselState.currentIndex = index;
             }
         }
 
@@ -442,6 +509,7 @@
                         dot.classList.remove('active');
                     });
                     document.querySelector(`.carousel-dot[data-index="${index}"]`).classList.add('active');
+                    carouselState.currentIndex = parseInt(index);
                 }
             });
         }
@@ -462,11 +530,36 @@
             `;
         }
 
+        // Handle window resize
+        function handleResize() {
+            const wasSmallScreen = carouselState.isSmallScreen;
+            initCarouselBehavior();
+            
+            // If screen size category changed, reinitialize carousel
+            if (wasSmallScreen !== carouselState.isSmallScreen) {
+                const articles = Array.from(document.querySelectorAll('.carousel-item')).map(item => {
+                    return {
+                        title: item.querySelector('.news-title a')?.textContent,
+                        url: item.querySelector('.news-title a')?.href,
+                        imageUrl: item.querySelector('.news-image')?.src,
+                        source: item.querySelector('.news-source')?.textContent.split('•')[0].trim(),
+                        description: item.querySelector('.news-description')?.textContent
+                    };
+                });
+                
+                if (articles.length > 0) {
+                    setupMobileCarousel(articles);
+                }
+            }
+        }
+
         // Event listeners
         elements.refreshBtn.addEventListener('click', fetchAllNews);
-
-        // Initial load
-        window.addEventListener('load', fetchAllNews);
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('load', () => {
+            fetchAllNews();
+            initCarouselBehavior();
+        });
     </script>
 </body>
 </html>
