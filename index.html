@@ -539,17 +539,22 @@
                         const itemEl = document.createElement('div');
                         itemEl.className = 'rss-item';
                         
-                        const title = item.title || 'No title available';
+                        const title = item.title || '';
                         const url = item.link || '#';
                         const description = item.description || 'No description available';
                         const date = item.pubDate ? new Date(item.pubDate) : null;
                         
-                        itemEl.innerHTML = `
+                        // Only add news-title div if title exists
+                        const titleHtml = title ? `
                             <div class="news-title">
                                 <a href="${url}" target="_blank" rel="noopener noreferrer">
                                     ${title}
                                 </a>
                             </div>
+                        ` : '';
+                        
+                        itemEl.innerHTML = `
+                            ${titleHtml}
                             ${date ? `<div class="news-source">${date.toLocaleDateString()}</div>` : ''}
                             <div class="news-description">
                                 ${description}
@@ -585,17 +590,22 @@
                         const itemEl = document.createElement('div');
                         itemEl.className = 'rss-item';
                         
-                        const title = item.title || 'No title available';
+                        const title = item.title || '';
                         const url = item.link || '#';
                         const description = item.description || 'No description available';
                         const date = item.pubDate ? new Date(item.pubDate) : null;
                         
-                        itemEl.innerHTML = `
+                        // Only add news-title div if title exists
+                        const titleHtml = title ? `
                             <div class="news-title">
                                 <a href="${url}" target="_blank" rel="noopener noreferrer">
                                     ${title}
                                 </a>
                             </div>
+                        ` : '';
+                        
+                        itemEl.innerHTML = `
+                            ${titleHtml}
                             ${date ? `<div class="news-source">${date.toLocaleDateString()}</div>` : ''}
                             <div class="news-description">
                                 ${description}
