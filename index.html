@@ -101,6 +101,36 @@
             background-color: #27ae60;
         }
 
+        /* RSS Feed Section */
+        .rss-section {
+            margin-top: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .rss-section h2 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .rss-feed {
+            margin-bottom: 20px;
+        }
+        .rss-feed h3 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .rss-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eee;
+        }
+        .rss-item:last-child {
+            border-bottom: none;
+        }
+
         /* Mobile carousel styles (applies to all mobile devices) */
         @media (max-width: 600px) {
             body {
@@ -184,12 +214,24 @@
     
     <div class="desktop-view">
         <div class="news-container" id="newsContainer"></div>
+        
+        <!-- RSS Feeds Section -->
+        <div class="rss-section" id="rssSection">
+            <h2>St. Mary's County Updates</h2>
+            <div id="rssFeedsContainer"></div>
+        </div>
     </div>
     
     <div class="mobile-view">
         <div class="carousel-container">
             <div class="carousel" id="mobileCarousel"></div>
             <div class="carousel-nav" id="carouselNav"></div>
+        </div>
+        
+        <!-- Mobile RSS Section -->
+        <div class="rss-section">
+            <h2>St. Mary's County Updates</h2>
+            <div id="mobileRssContainer"></div>
         </div>
     </div>
 
@@ -241,13 +283,40 @@
             }
         ];
 
+        // RSS Feed URLs
+        const RSS_FEEDS = [
+            {
+                title: "Latest Updates",
+                url: "https://www.stmaryscountymd.gov/RSS/News.xml",
+                targetId: "latest-updates"
+            },
+            {
+                title: "911 CAD Calls",
+                url: "https://apps.stmarysmd.com/RSS/CAD.xml",
+                targetId: "cad-calls"
+            },
+            {
+                title: "Police Calls",
+                url: "https://apps.stmarysmd.com/RSS/CADPolice.xml",
+                targetId: "police-calls"
+            }
+        ];
+
         // DOM elements
         const elements = {
             newsContainer: document.getElementById('newsContainer'),
             mobileCarousel: document.getElementById('mobileCarousel'),
             carouselNav: document.getElementById('carouselNav'),
-            refreshBtn: document.getElementById('refreshBtn')
+            refreshBtn: document.getElementById('refreshBtn'),
+            rssFeedsContainer: document.getElementById('rssFeedsContainer'),
+            mobileRssContainer: document.getElementById('mobileRssContainer')
         };
+
+        // Main function to fetch all data
+        async function fetchAllData() {
+            await fetchAllNews();
+            await fetchAllRSSFeeds();
+        }
 
         // Fetch news from all APIs
         async function fetchAllNews() {
@@ -284,6 +353,42 @@
                 console.error('Combined fetch error:', error);
                 showError('Failed to load news. Please try again later.');
             }
+        }
+
+        // Fetch all RSS feeds
+        async function fetchAllRSSFeeds() {
+            elements.rssFeedsContainer.innerHTML = '<p class="loading">Loading St. Mary\'s County updates...</p>';
+            elements.mobileRssContainer.innerHTML = '<p class="loading">Loading St. Mary\'s County updates...</p>';
+            
+            try {
+                const requests = RSS_FEEDS.map(feed => {
+                    return fetchRSSFeed(feed.url)
+                        .then(items => ({
+                            title: feed.title,
+                            items: items
+                        }))
+                        .catch(error => {
+                            console.error(`RSS Error (${feed.title}):`, error);
+                            return { title: feed.title, items: [] };
+                        });
+                });
+                
+                const results = await Promise.all(requests);
+                displayRSSFeeds(results);
+                displayMobileRSSFeeds(results);
+                
+            } catch (error) {
+                console.error('RSS fetch error:', error);
+                showRSSError('Failed to load St. Mary\'s County updates. Please try again later.');
+            }
+        }
+
+        // Fetch and parse single RSS feed
+        async function fetchRSSFeed(feedUrl) {
+            const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            return data.items || [];
         }
 
         // Helper functions
@@ -413,6 +518,98 @@
             });
         }
 
+        function displayRSSFeeds(feeds) {
+            if (!feeds || feeds.length === 0) {
+                showRSSError('No RSS feeds loaded. Please try refreshing.');
+                return;
+            }
+            
+            elements.rssFeedsContainer.innerHTML = '';
+            
+            feeds.forEach(feed => {
+                if (feed.items && feed.items.length > 0) {
+                    const feedContainer = document.createElement('div');
+                    feedContainer.className = 'rss-feed';
+                    
+                    const feedTitle = document.createElement('h3');
+                    feedTitle.textContent = feed.title;
+                    feedContainer.appendChild(feedTitle);
+                    
+                    feed.items.slice(0, 5).forEach(item => {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'rss-item';
+                        
+                        const title = item.title || 'No title available';
+                        const url = item.link || '#';
+                        const description = item.description || 'No description available';
+                        const date = item.pubDate ? new Date(item.pubDate) : null;
+                        
+                        itemEl.innerHTML = `
+                            <div class="news-title">
+                                <a href="${url}" target="_blank" rel="noopener noreferrer">
+                                    ${title}
+                                </a>
+                            </div>
+                            ${date ? `<div class="news-source">${date.toLocaleDateString()}</div>` : ''}
+                            <div class="news-description">
+                                ${description}
+                            </div>
+                        `;
+                        
+                        feedContainer.appendChild(itemEl);
+                    });
+                    
+                    elements.rssFeedsContainer.appendChild(feedContainer);
+                }
+            });
+        }
+
+        function displayMobileRSSFeeds(feeds) {
+            if (!feeds || feeds.length === 0) {
+                showMobileRSSError('No RSS feeds loaded. Please try refreshing.');
+                return;
+            }
+            
+            elements.mobileRssContainer.innerHTML = '';
+            
+            feeds.forEach(feed => {
+                if (feed.items && feed.items.length > 0) {
+                    const feedContainer = document.createElement('div');
+                    feedContainer.className = 'rss-feed';
+                    
+                    const feedTitle = document.createElement('h3');
+                    feedTitle.textContent = feed.title;
+                    feedContainer.appendChild(feedTitle);
+                    
+                    feed.items.slice(0, 3).forEach(item => { // Show fewer items on mobile
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'rss-item';
+                        
+                        const title = item.title || 'No title available';
+                        const url = item.link || '#';
+                        const description = item.description || 'No description available';
+                        const date = item.pubDate ? new Date(item.pubDate) : null;
+                        
+                        itemEl.innerHTML = `
+                            <div class="news-title">
+                                <a href="${url}" target="_blank" rel="noopener noreferrer">
+                                    ${title}
+                                </a>
+                            </div>
+                            ${date ? `<div class="news-source">${date.toLocaleDateString()}</div>` : ''}
+                            <div class="news-description">
+                                ${description}
+                            </div>
+                        `;
+                        
+                        feedContainer.appendChild(itemEl);
+                    });
+                    
+                    elements.mobileRssContainer.appendChild(feedContainer);
+                }
+            });
+        }
+
         function scrollToCarouselItem(index) {
             const item = document.querySelector(`.carousel-item[data-index="${index}"]`);
             if (item) {
@@ -463,11 +660,27 @@
             `;
         }
 
+        function showRSSError(message) {
+            elements.rssFeedsContainer.innerHTML = `
+                <div class="error">
+                    ${message}
+                </div>
+            `;
+        }
+
+        function showMobileRSSError(message) {
+            elements.mobileRssContainer.innerHTML = `
+                <div class="error">
+                    ${message}
+                </div>
+            `;
+        }
+
         // Event listeners
-        elements.refreshBtn.addEventListener('click', fetchAllNews);
+        elements.refreshBtn.addEventListener('click', fetchAllData);
 
         // Initial load
-        window.addEventListener('load', fetchAllNews);
+        window.addEventListener('load', fetchAllData);
     </script>
 </body>
 </html>
