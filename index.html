@@ -22,6 +22,29 @@
             font-size: 1.5em;
         }
         
+        /* Header with donation button */
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .donate-btn {
+            background-color: #0070ba;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+        
+        .donate-btn:hover {
+            background-color: #005ea6;
+        }
+        
         /* Desktop news container */
         .desktop-view .news-container {
             margin-top: 20px;
@@ -194,6 +217,16 @@
             .carousel-dot.active {
                 background: #2ecc71;
             }
+            
+            /* Adjust header for mobile */
+            .header-container {
+                flex-direction: column;
+            }
+            
+            .donate-btn {
+                margin-top: 10px;
+                width: 100%;
+            }
         }
         
         /* Desktop styles */
@@ -209,7 +242,17 @@
     </style>
 </head>
 <body>
-    <h1>Manatee County News</h1>
+    <div class="header-container">
+        <h1>Manatee County News</h1>
+        <!-- PayPal Donation Button -->
+        <form action="https://www.paypal.com/donate" method="post" target="_blank">
+            <input type="hidden" name="business" value="YOUR_PAYPAL_EMAIL_OR_MERCHANT_ID">
+            <input type="hidden" name="item_name" value="Support Manatee County News">
+            <input type="hidden" name="currency_code" value="USD">
+            <button type="submit" class="donate-btn">Donate via PayPal</button>
+        </form>
+    </div>
+    
     <button class="refresh-btn" id="refreshBtn">Refresh News</button>
     
     <div class="desktop-view">
