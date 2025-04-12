@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" href="data:,">
-    <title>Manatee County News</title>
+    <title>St. Mary's Sentinel</title>
     <style>
         body {
             font-family: Times New Roman, sans-serif;
@@ -108,7 +108,7 @@
         }
         .refresh-btn {
             display: block;
-            width: 250px;
+            width: 200px;
             margin: 0 auto 25px;
             padding: 12px;
             background-color: #2ecc71;
@@ -243,7 +243,7 @@
 </head>
 <body>
     <div class="header-container">
-        <h1>Manatee County News</h1>
+        <h1>St. Mary's Sentinel</h1>
         <!-- PayPal Donation Button -->
         <form action="https://www.paypal.com/donate" method="post" target="_blank">
             <input type="hidden" name="business" value="YOUR_PAYPAL_EMAIL_OR_MERCHANT_ID">
@@ -363,8 +363,8 @@
 
         // Fetch news from all APIs
         async function fetchAllNews() {
-            elements.newsContainer.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
-            elements.mobileCarousel.innerHTML = '<p class="loading">Loading latest Manatee County news...</p>';
+            elements.newsContainer.innerHTML = '<p class="loading">Loading latest St. Mary\'s County news...</p>';
+            elements.mobileCarousel.innerHTML = '<p class="loading">Loading latest St. Mary\'s County news...</p>';
             
             try {
                 const requests = APIS.map(api => {
@@ -442,7 +442,7 @@
 
         function displayNews(articles) {
             if (!articles || articles.length === 0) {
-                showError('No news articles found about Manatee County. Please try refreshing.');
+                showError('No news articles found about St. Mary\'s County. Please try refreshing.');
                 return;
             }
             
@@ -485,7 +485,7 @@
 
         function displayMobileCarousel(articles) {
             if (!articles || articles.length === 0) {
-                showMobileError('No news articles found about Manatee County. Please try refreshing.');
+                showMobileError('No news articles found about St. Mary\'s County. Please try refreshing.');
                 return;
             }
             
