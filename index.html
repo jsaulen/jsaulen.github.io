@@ -260,7 +260,7 @@
         
         <!-- RSS Feeds Section -->
         <div class="rss-section" id="rssSection">
-            <h2>St. Mary's County Updates</h2>
+            <h2>Manatee County Updates</h2>
             <div id="rssFeedsContainer"></div>
         </div>
     </div>
@@ -273,7 +273,7 @@
         
         <!-- Mobile RSS Section -->
         <div class="rss-section">
-            <h2>St. Mary's County Updates</h2>
+            <h2>Manatee County Updates</h2>
             <div id="mobileRssContainer"></div>
         </div>
     </div>
@@ -400,8 +400,8 @@
 
         // Fetch all RSS feeds
         async function fetchAllRSSFeeds() {
-            elements.rssFeedsContainer.innerHTML = '<p class="loading">Loading St. Mary\'s County updates...</p>';
-            elements.mobileRssContainer.innerHTML = '<p class="loading">Loading St. Mary\'s County updates...</p>';
+            elements.rssFeedsContainer.innerHTML = '<p class="loading">Loading Manatee County updates...</p>';
+            elements.mobileRssContainer.innerHTML = '<p class="loading">Loading Manatee County updates...</p>';
             
             try {
                 const requests = RSS_FEEDS.map(feed => {
@@ -422,7 +422,7 @@
                 
             } catch (error) {
                 console.error('RSS fetch error:', error);
-                showRSSError('Failed to load St. Mary\'s County updates. Please try again later.');
+                showRSSError('Failed to load Manatee County updates. Please try again later.');
             }
         }
 
@@ -442,7 +442,7 @@
 
         function displayNews(articles) {
             if (!articles || articles.length === 0) {
-                showError('No news articles found about St. Mary\'s County. Please try refreshing.');
+                showError('No news articles found about Manatee County. Please try refreshing.');
                 return;
             }
             
@@ -485,7 +485,7 @@
 
         function displayMobileCarousel(articles) {
             if (!articles || articles.length === 0) {
-                showMobileError('No news articles found about St. Mary\'s County. Please try refreshing.');
+                showMobileError('No news articles found about Manatee County. Please try refreshing.');
                 return;
             }
             
